@@ -86,6 +86,8 @@ const getProducts = async (req, res) => {
       limit: Number(limit),
       total,
       totalPages: Math.ceil(total / Number(limit)),
+      hasNextPage: Number(page) < Math.ceil(total / Number(limit)),
+      hasPrevPage: Number(page) > 1,
     },
   }, 'Lấy danh sách sản phẩm thành công'));
 };
@@ -102,14 +104,57 @@ const getNewProducts = async (req, res) => {
 };
 
 const getBestsellers = async (req, res) => {
-  const { limit = 8 } = req.query;
-  const products = await Product.find({ isActive: true })
-    .populate('category', 'name slug')
-    .sort({ soldQuantity: -1 })
-    .limit(Number(limit))
-    .lean();
+  const { limit = 10, page = 1 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
 
-  res.status(200).json(HttpResponse.success(products, 'Lấy sản phẩm bán chạy thành công'));
+  const [products, total] = await Promise.all([
+    Product.find({ isActive: true })
+      .populate('category', 'name slug')
+      .sort({ soldQuantity: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Product.countDocuments({ isActive: true }),
+  ]);
+
+  res.status(200).json(HttpResponse.success({
+    products,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit)),
+      hasNextPage: Number(page) < Math.ceil(total / Number(limit)),
+      hasPrevPage: Number(page) > 1,
+    },
+  }, 'Lấy sản phẩm bán chạy thành công'));
+};
+
+const getMostViewed = async (req, res) => {
+  const { limit = 10, page = 1 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [products, total] = await Promise.all([
+    Product.find({ isActive: true })
+      .populate('category', 'name slug')
+      .sort({ viewCount: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Product.countDocuments({ isActive: true }),
+  ]);
+
+  res.status(200).json(HttpResponse.success({
+    products,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit)),
+      hasNextPage: Number(page) < Math.ceil(total / Number(limit)),
+      hasPrevPage: Number(page) > 1,
+    },
+  }, 'Lấy sản phẩm xem nhiều nhất thành công'));
 };
 
 const getFeaturedProducts = async (req, res) => {
@@ -125,7 +170,11 @@ const getFeaturedProducts = async (req, res) => {
 
 const getProductBySlug = async (req, res) => {
   const { slug } = req.params;
-  const product = await Product.findOne({ slug, isActive: true })
+  const product = await Product.findOneAndUpdate(
+    { slug, isActive: true },
+    { $inc: { viewCount: 1 } },
+    { new: true }
+  )
     .populate('category', 'name slug description')
     .lean();
 
@@ -175,6 +224,7 @@ module.exports = {
   getProducts,
   getNewProducts,
   getBestsellers,
+  getMostViewed,
   getFeaturedProducts,
   getProductBySlug,
   getRelatedProducts,
