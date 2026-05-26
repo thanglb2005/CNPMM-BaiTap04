@@ -1,54 +1,95 @@
 const Redis = require('ioredis');
 
-let redis;
+// In-memory mock khi Redis không khả dụng
+const mockRedis = {
+  _store: new Map(),
+  _timers: new Map(),
 
-const createInMemoryStore = () => {
-  console.warn('⚠️  Redis not available — using in-memory fallback (OTP still works within session)');
-  const store = new Map();
-  const timers = new Map();
+  set: async function(key, value, exFlag, ttl) {
+    this._store.set(key, value);
+    if (exFlag === 'EX' && ttl) {
+      const existing = this._timers.get(key);
+      if (existing) clearTimeout(existing);
+      const timer = setTimeout(() => {
+        this._store.delete(key);
+        this._timers.delete(key);
+      }, ttl * 1000);
+      this._timers.set(key, timer);
+    }
+    return 'OK';
+  },
 
-  return {
-    set: async (key, value, exFlag, ttl) => {
-      store.set(key, value);
-      if (exFlag === 'EX' && ttl) {
-        const timer = setTimeout(() => { store.delete(key); timers.delete(key); }, ttl * 1000);
-        const existing = timers.get(key);
-        if (existing) clearTimeout(existing);
-        timers.set(key, timer);
-      }
-      return 'OK';
-    },
-    get: async (key) => store.get(key) || null,
-    del: async (key) => { store.delete(key); return 1; },
-    on:  () => {},
-  };
+  get: async function(key) {
+    return this._store.get(key) || null;
+  },
+
+  del: async function(key) {
+    this._store.delete(key);
+    const timer = this._timers.get(key);
+    if (timer) { clearTimeout(timer); this._timers.delete(key); }
+    return 1;
+  },
+
+  on: function() {},
+
+  isMock: true,
 };
 
-try {
-  redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-    lazyConnect: true,
-    connectTimeout: 3000,
-    retryStrategy: (times) => {
-      if (times > 2) return null;
-      return Math.min(times * 200, 1000);
-    },
-    maxRetriesPerRequest: 1,
-  });
+// Singleton - chỉ khởi tạo 1 lần
+let _client = mockRedis;
+let _isConnected = false;
 
-  redis.on('connect', () => console.log('✓ Redis connected'));
-  redis.on('error', (err) => {
-    console.warn(`⚠️  Redis: ${err.message} — falling back to in-memory store`);
-    if (redis && redis._events) {
-      Object.assign(redis, createInMemoryStore());
-    }
-  });
+const config = {
+  lazyConnect: true,
+  connectTimeout: 5000,
+  maxRetriesPerRequest: 3,
+  retryStrategy: (times) => {
+    if (times > 3) return null;
+    return Math.min(times * 300, 2000);
+  },
+};
 
-  redis.connect().catch(() => {
-    Object.assign(redis, createInMemoryStore());
-  });
+const client = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', config);
 
-} catch {
-  redis = createInMemoryStore();
-}
+client.on('connect', () => {
+  console.log('✅ Redis connected');
+  _client = client;
+  _isConnected = true;
+});
 
-module.exports = redis;
+client.on('ready', () => {
+  console.log('✅ Redis ready');
+});
+
+client.on('error', (err) => {
+  console.warn(`⚠️  Redis error: ${err.message}`);
+});
+
+client.on('close', () => {
+  console.warn('⚠️  Redis connection closed');
+  _isConnected = false;
+});
+
+// Connect (non-blocking)
+client.connect().catch(() => {
+  console.warn('⚠️  Cannot connect to Redis — using in-memory store');
+});
+
+// Export proxy object - luôn trỏ đến client đúng
+module.exports = {
+  async set(...args) {
+    return await _client.set(...args);
+  },
+  async get(...args) {
+    return await _client.get(...args);
+  },
+  async del(...args) {
+    return await _client.del(...args);
+  },
+  on(event, callback) {
+    client.on(event, callback);
+  },
+  get isConnected() {
+    return _isConnected;
+  },
+};

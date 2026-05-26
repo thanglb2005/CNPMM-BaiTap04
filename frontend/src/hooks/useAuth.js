@@ -14,19 +14,25 @@ import {
   selectAuth,
 } from '../store/slices/authSlice';
 
+/**
+ * useAuth – custom hook cung cấp state auth và các action.
+ * Sử dụng Redux Hooks (useDispatch / useSelector) để quản lý state.
+ */
 export function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading, error, requiresEmailVerification } =
     useSelector(selectAuth);
 
-  const loginAction = useCallback(
+  // ── Login ──────────────────────────────────────────────────────────────────
+  const login = useCallback(
     async ({ email, password }) => {
       dispatch(clearError());
       const result = await dispatch(loginUser({ email, password }));
       if (loginUser.fulfilled.match(result)) {
+        const userRole = result.payload?.user?.role || result.payload?.role;
         toast.success(`Chào mừng trở lại, ${result.payload?.username || 'bạn'}! 👋`);
-        navigate('/home');
+        navigate(userRole === 'admin' ? '/admin' : '/home');
       } else {
         toast.error(result.payload || 'Đăng nhập thất bại');
       }
@@ -34,7 +40,8 @@ export function useAuth() {
     [dispatch, navigate]
   );
 
-  const registerAction = useCallback(
+  // ── Register ───────────────────────────────────────────────────────────────
+  const register = useCallback(
     async ({ email, username, password }) => {
       dispatch(clearError());
       const result = await dispatch(registerUser({ email, username, password }));
@@ -49,13 +56,15 @@ export function useAuth() {
     [dispatch]
   );
 
-  const verifyOtpAction = useCallback(
+  // ── Verify OTP ─────────────────────────────────────────────────────────────
+  const verifyEmailOtpAction = useCallback(
     async ({ email, otp }) => {
       dispatch(clearError());
       const result = await dispatch(verifyEmailOtp({ email, otp }));
       if (verifyEmailOtp.fulfilled.match(result)) {
         toast.success('Email đã xác minh! Tài khoản đã được kích hoạt.');
-        navigate('/home');
+        const userRole = result.payload?.user?.role || result.payload?.role;
+        navigate(userRole === 'admin' ? '/admin' : '/home');
         return true;
       } else {
         toast.error(result.payload || 'Xác minh OTP thất bại');
@@ -65,12 +74,14 @@ export function useAuth() {
     [dispatch, navigate]
   );
 
-  const logoutAction = useCallback(async () => {
+  // ── Logout ─────────────────────────────────────────────────────────────────
+  const logout = useCallback(async () => {
     await dispatch(logoutUser());
     toast.success('Đã đăng xuất');
     navigate('/login');
   }, [dispatch, navigate]);
 
+  // ── Forgot Password ────────────────────────────────────────────────────────
   const forgotPasswordAction = useCallback(
     async ({ email }) => {
       dispatch(clearError());
@@ -86,7 +97,8 @@ export function useAuth() {
     [dispatch]
   );
 
-  const resetPasswordAction = useCallback(
+  // ── Reset Password ─────────────────────────────────────────────────────────
+  const resetPasswordOtpAction = useCallback(
     async ({ email, otp, newPassword }) => {
       dispatch(clearError());
       const result = await dispatch(resetPasswordOtp({ email, otp, newPassword }));
@@ -102,6 +114,7 @@ export function useAuth() {
     [dispatch, navigate]
   );
 
+  // ── Load Current User ──────────────────────────────────────────────────────
   const loadCurrentUser = useCallback(() => dispatch(loadUser()), [dispatch]);
 
   return {
@@ -110,13 +123,13 @@ export function useAuth() {
     loading,
     error,
     requiresEmailVerification,
-    login: loginAction,
-    register: registerAction,
-    verifyEmailOtp: verifyOtpAction,
-    logout: logoutAction,
-    forgotPassword: forgotPasswordAction,
-    resetPasswordOtp: resetPasswordAction,
-    loadUser: loadCurrentUser,
-    clearError: () => dispatch(clearError()),
+    login,
+    register,
+    verifyEmailOtp:    verifyEmailOtpAction,
+    logout,
+    forgotPassword:    forgotPasswordAction,
+    resetPasswordOtp:  resetPasswordOtpAction,
+    loadUser:          loadCurrentUser,
+    clearError:        () => dispatch(clearError()),
   };
 }

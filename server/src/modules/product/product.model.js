@@ -110,7 +110,6 @@ const ProductSchema = new Schema(
     viewCount: {
       type: Number,
       default: 0,
-      min: [0, 'Số lượt xem không được nhỏ hơn 0'],
     },
   },
   {
@@ -124,6 +123,7 @@ const ProductSchema = new Schema(
   }
 );
 
+// Indexes
 ProductSchema.index({ slug: 1 }, { unique: true });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ author: 1 });
@@ -137,6 +137,7 @@ ProductSchema.index({ viewCount: -1 });
 ProductSchema.index({ createdAt: -1 });
 ProductSchema.index({ name: 'text', author: 'text', description: 'text' });
 
+// Virtual for discount percentage
 ProductSchema.virtual('discountPercent').get(function () {
   if (this.salePrice && this.price > this.salePrice) {
     return Math.round(((this.price - this.salePrice) / this.price) * 100);
@@ -144,13 +145,16 @@ ProductSchema.virtual('discountPercent').get(function () {
   return 0;
 });
 
+// Virtual for is on sale
 ProductSchema.virtual('isOnSale').get(function () {
   return this.salePrice && this.salePrice < this.price;
 });
 
+// Ensure virtuals are included in JSON
 ProductSchema.set('toJSON', { virtuals: true });
 ProductSchema.set('toObject', { virtuals: true });
 
+// Static method to generate slug
 ProductSchema.statics.generateSlug = function (name) {
   return name
     .toLowerCase()

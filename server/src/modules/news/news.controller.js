@@ -1,7 +1,8 @@
 const News = require('./news.model');
-const { HttpResponse } = require('../../shared/utils/apiResponse');
-const { AppException } = require('../../shared/errors/AppError');
+const { ApiResponse } = require('../../shared/utils/apiResponse');
+const { AppError } = require('../../shared/errors/AppError');
 
+// GET /api/news - Lấy danh sách tin tức với pagination
 const getNews = async (req, res) => {
   const { page = 1, limit = 10, category } = req.query;
 
@@ -21,7 +22,7 @@ const getNews = async (req, res) => {
     News.countDocuments(query),
   ]);
 
-  res.status(200).json(HttpResponse.success({
+  res.status(200).json(ApiResponse.success({
     news,
     pagination: {
       page: Number(page),
@@ -32,6 +33,7 @@ const getNews = async (req, res) => {
   }, 'Lấy danh sách tin tức thành công'));
 };
 
+// GET /api/news/featured - Lấy tin tức nổi bật
 const getFeaturedNews = async (req, res) => {
   const { limit = 5 } = req.query;
   
@@ -40,9 +42,10 @@ const getFeaturedNews = async (req, res) => {
     .limit(Number(limit))
     .lean();
 
-  res.status(200).json(HttpResponse.success(news, 'Lấy tin tức nổi bật thành công'));
+  res.status(200).json(ApiResponse.success(news, 'Lấy tin tức nổi bật thành công'));
 };
 
+// GET /api/news/latest - Lấy tin tức mới nhất
 const getLatestNews = async (req, res) => {
   const { limit = 5 } = req.query;
   
@@ -51,9 +54,10 @@ const getLatestNews = async (req, res) => {
     .limit(Number(limit))
     .lean();
 
-  res.status(200).json(HttpResponse.success(news, 'Lấy tin tức mới nhất thành công'));
+  res.status(200).json(ApiResponse.success(news, 'Lấy tin tức mới nhất thành công'));
 };
 
+// GET /api/news/:slug - Lấy chi tiết tin tức
 const getNewsBySlug = async (req, res) => {
   const { slug } = req.params;
   
@@ -64,10 +68,10 @@ const getNewsBySlug = async (req, res) => {
   ).lean();
 
   if (!article) {
-    throw new AppException('Không tìm thấy tin tức', 404);
+    throw new AppError('Không tìm thấy tin tức', 404);
   }
 
-  res.status(200).json(HttpResponse.success(article, 'Lấy thông tin tin tức thành công'));
+  res.status(200).json(ApiResponse.success(article, 'Lấy thông tin tin tức thành công'));
 };
 
 module.exports = {

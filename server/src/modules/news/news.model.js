@@ -66,12 +66,14 @@ const NewsSchema = new Schema(
   }
 );
 
+// Indexes
 NewsSchema.index({ slug: 1 }, { unique: true });
 NewsSchema.index({ isActive: 1 });
 NewsSchema.index({ isFeatured: 1 });
 NewsSchema.index({ createdAt: -1 });
 NewsSchema.index({ title: 'text', content: 'text' });
 
+// Static method to generate slug
 NewsSchema.statics.generateSlug = function (title) {
   return title
     .toLowerCase()

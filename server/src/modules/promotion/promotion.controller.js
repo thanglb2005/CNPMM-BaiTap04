@@ -1,7 +1,8 @@
 const Promotion = require('./promotion.model');
-const { HttpResponse } = require('../../shared/utils/apiResponse');
-const { AppException } = require('../../shared/errors/AppError');
+const { ApiResponse } = require('../../shared/utils/apiResponse');
+const { AppError } = require('../../shared/errors/AppError');
 
+// GET /api/promotions - Lấy tất cả khuyến mãi đang active
 const getActivePromotions = async (req, res) => {
   const now = new Date();
   
@@ -13,9 +14,10 @@ const getActivePromotions = async (req, res) => {
     .sort({ createdAt: -1 })
     .lean();
 
-  res.status(200).json(HttpResponse.success(promotions, 'Lấy danh sách khuyến mãi thành công'));
+  res.status(200).json(ApiResponse.success(promotions, 'Lấy danh sách khuyến mãi thành công'));
 };
 
+// GET /api/promotions/featured - Lấy khuyến mãi nổi bật (banner)
 const getFeaturedPromotions = async (req, res) => {
   const { limit = 5 } = req.query;
   const now = new Date();
@@ -29,9 +31,10 @@ const getFeaturedPromotions = async (req, res) => {
     .limit(Number(limit))
     .lean();
 
-  res.status(200).json(HttpResponse.success(promotions, 'Lấy khuyến mãi nổi bật thành công'));
+  res.status(200).json(ApiResponse.success(promotions, 'Lấy khuyến mãi nổi bật thành công'));
 };
 
+// GET /api/promotions/:slug - Lấy chi tiết khuyến mãi
 const getPromotionBySlug = async (req, res) => {
   const { slug } = req.params;
   const now = new Date();
@@ -44,10 +47,10 @@ const getPromotionBySlug = async (req, res) => {
   }).lean();
 
   if (!promotion) {
-    throw new AppException('Không tìm thấy khuyến mãi', 404);
+    throw new AppError('Không tìm thấy khuyến mãi', 404);
   }
 
-  res.status(200).json(HttpResponse.success(promotion, 'Lấy thông tin khuyến mãi thành công'));
+  res.status(200).json(ApiResponse.success(promotion, 'Lấy thông tin khuyến mãi thành công'));
 };
 
 module.exports = {

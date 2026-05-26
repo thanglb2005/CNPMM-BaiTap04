@@ -1,11 +1,17 @@
 const EventEmitter = require('events');
 
-class MessageBus extends EventEmitter {
+/**
+ * Singleton EventBus for decoupled communication between modules.
+ * Usage:
+ *   eventBus.emit('user:registered', { userId, email, otp });
+ *   eventBus.on('user:registered', handler);
+ */
+class EventBus extends EventEmitter {
   constructor() {
     super();
     this.setMaxListeners(50);
   }
 }
 
-const messageBus = new MessageBus();
-module.exports = messageBus;
+const eventBus = new EventBus();
+module.exports = eventBus;

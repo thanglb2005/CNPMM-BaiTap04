@@ -1,11 +1,15 @@
-import apiClient from './axiosClient';
+import axiosClient from './axiosClient';
 
 export const productAPI = {
-  getProducts: (params) => apiClient.get('/products', { params }),
-  getNewProducts: (limit = 8) => apiClient.get('/products/new', { params: { limit } }),
-  getBestsellers: (params = {}) => apiClient.get('/products/bestsellers', { params: { limit: 10, ...params } }),
-  getMostViewed: (params = {}) => apiClient.get('/products/most-viewed', { params: { limit: 10, ...params } }),
-  getFeaturedProducts: (limit = 8) => apiClient.get('/products/featured', { params: { limit } }),
-  getProductBySlug: (slug) => apiClient.get(`/products/${slug}`),
-  getRelatedProducts: (id, limit = 6) => apiClient.get(`/products/related/${id}`, { params: { limit } }),
+  getProducts: (params) => axiosClient.get('/products', { params }),
+  getNewProducts: (limit = 8) => axiosClient.get('/products/new', { params: { limit } }),
+  getBestsellers: (limit = 8) => axiosClient.get('/products/bestsellers', { params: { limit } }),
+  getFeaturedProducts: (limit = 8) => axiosClient.get('/products/featured', { params: { limit } }),
+  getProductBySlug: (slug) => axiosClient.get(`/products/${slug}`),
+  getRelatedProducts: (id, limit = 6) => axiosClient.get(`/products/related/${id}`, { params: { limit } }),
+  getTopSellingProducts: (page = 1, limit = 10) => axiosClient.get('/products/top-selling', { params: { page, limit } }),
+  getTopViewedProducts: (page = 1, limit = 10) => axiosClient.get('/products/top-viewed', { params: { page, limit } }),
+  getProductsByCategory: (categoryId, cursor = null, limit = 12) =>
+    axiosClient.get(`/products/category/${categoryId}`, { params: { cursor, limit } }),
+  incrementViewCount: (productId) => axiosClient.post(`/products/${productId}/view`),
 };

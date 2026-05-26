@@ -1,7 +1,7 @@
-import apiClient from './axiosClient';
+import axiosClient from './axiosClient';
 
 export const categoryAPI = {
-  getAll: () => apiClient.get('/categories'),
-  getFeatured: () => apiClient.get('/categories/featured'),
-  getBySlug: (slug) => apiClient.get(`/categories/${slug}`),
+  getAll: () => axiosClient.get('/categories'),
+  getFeatured: () => axiosClient.get('/categories/featured'),
+  getBySlug: (slug) => axiosClient.get(`/categories/${slug}`),
 };

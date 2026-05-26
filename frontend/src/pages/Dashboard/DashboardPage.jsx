@@ -4,6 +4,10 @@ import { useAuth } from '../../hooks/useAuth';
 import AuthButton from '../../components/AuthButton/AuthButton';
 import { FiLogOut, FiUser, FiMail, FiShield } from 'react-icons/fi';
 
+/**
+ * DashboardPage – trang sau khi đăng nhập thành công.
+ * Hiển thị thông tin user từ Redux store.
+ */
 export default function DashboardPage() {
   const user    = useSelector(selectUser);
   const { logout, loading } = useAuth();
@@ -14,6 +18,7 @@ export default function DashboardPage() {
       <div className="bg-dark-800 border border-dark-600 rounded-2xl p-8
                       w-full max-w-md shadow-2xl shadow-black/40 animate-slide-up">
 
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-brand-500 to-brand-700
                           rounded-full flex items-center justify-center mx-auto mb-4
@@ -26,6 +31,7 @@ export default function DashboardPage() {
           <p className="text-gray-400 text-sm mt-1">Bạn đã đăng nhập thành công</p>
         </div>
 
+        {/* User Info */}
         <div className="space-y-3 mb-8">
           {user?.email && (
             <div className="flex items-center gap-3 bg-dark-700 rounded-xl px-4 py-3">
@@ -56,12 +62,14 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Redux State Badge */}
         <div className="bg-brand-600/10 border border-brand-600/30 rounded-xl px-4 py-3 mb-6">
           <p className="text-brand-300 text-xs font-mono text-center">
             ✅ State được quản lý bởi Redux Toolkit
           </p>
         </div>
 
+        {/* Logout */}
         <AuthButton
           id="logout-btn"
           type="button"

@@ -46,10 +46,12 @@ const CategorySchema = new Schema(
   }
 );
 
+// Indexes
 CategorySchema.index({ slug: 1 }, { unique: true });
 CategorySchema.index({ isActive: 1 });
 CategorySchema.index({ order: 1 });
 
+// Static method to generate slug
 CategorySchema.statics.generateSlug = function (name) {
   return name
     .toLowerCase()

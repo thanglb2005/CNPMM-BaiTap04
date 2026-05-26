@@ -7,7 +7,7 @@ const hasSmtpConfig = () => Boolean(
   process.env.SMTP_PASS
 );
 
-const buildTransporter = () => {
+const createTransporter = () => {
   if (!hasSmtpConfig()) return null;
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -20,14 +20,14 @@ const buildTransporter = () => {
   });
 };
 
-class EmailService {
+class MailerService {
   constructor() {
-    this.transporter = buildTransporter();
+    this.transporter = createTransporter();
   }
 
-  async send({ to, subject, text, html }) {
+  async sendMail({ to, subject, text, html }) {
     if (!this.transporter) {
-      console.warn(`[Email] SMTP not configured. Skipping email to ${to}`);
+      console.warn(`[Mailer] SMTP not configured. Skipping email to ${to}`);
       return;
     }
 
@@ -41,4 +41,4 @@ class EmailService {
   }
 }
 
-module.exports = new EmailService();
+module.exports = new MailerService();

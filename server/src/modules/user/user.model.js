@@ -25,12 +25,12 @@ const UserSchema = new Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters'],
-      select: false,
+      select: false, // never return password in queries by default
     },
     role: {
       type: String,
-      enum: ['admin', 'student', 'teacher'],
-      default: 'student',
+      enum: ['admin', 'customer'],
+      default: 'customer',
     },
     avatar: {
       type: String,
@@ -76,14 +76,18 @@ const UserSchema = new Schema(
   }
 );
 
+// ── Indexes ──────────────────────────────────────────────────────────────────
+// email and username already indexed via unique:true in schema definition
 UserSchema.index({ 'oauth.googleId': 1 });
 
+// ── Pre-save Hook: Hash password ──────────────────────────────────────────────
 UserSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
 });
 
-UserSchema.methods.checkPassword = async function (candidate) {
+// ── Instance Methods ──────────────────────────────────────────────────────────
+UserSchema.methods.comparePassword = async function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
 
@@ -101,6 +105,7 @@ UserSchema.methods.toPublicProfile = function () {
   };
 };
 
+// ── Static Methods ────────────────────────────────────────────────────────────
 UserSchema.statics.findByEmail = function (email) {
   return this.findOne({ email }).select('+password');
 };

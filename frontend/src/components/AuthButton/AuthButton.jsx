@@ -1,3 +1,14 @@
+/**
+ * AuthButton – reusable submit / action button for auth forms.
+ *
+ * Props:
+ *   children  – button label / content
+ *   loading   – shows spinner when true
+ *   variant   – 'primary' | 'secondary'  (default: 'primary')
+ *   type      – button type (default: 'submit')
+ *   onClick
+ *   disabled
+ */
 export default function AuthButton({
   children,
   loading = false,

@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
+import { FaShoppingCart } from 'react-icons/fa';
 import Layout from '../../components/Layout/Layout';
 import { productAPI } from '../../api/product.api';
+import { addToCart, fetchCart } from '../../store/slices/cartSlice';
+import { selectIsAuthenticated } from '../../store/slices/authSlice';
+import toast from 'react-hot-toast';
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const { loading: cartLoading } = useSelector((state) => state.cart);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -20,6 +31,9 @@ export default function ProductDetailPage() {
         const response = await productAPI.getProductBySlug(slug);
         if (response.data?.product) {
           setProduct(response.data.product);
+          productAPI.incrementViewCount(response.data.product._id).catch(err => {
+            console.log('View count error:', err);
+          });
         }
       } catch (error) {
         console.error('Error:', error);
@@ -29,6 +43,30 @@ export default function ProductDetailPage() {
     };
     fetchProduct();
   }, [slug]);
+
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để thêm vào giỏ hàng');
+      navigate('/login');
+      return;
+    }
+
+    if (product.stockQuantity < quantity) {
+      toast.error('Số lượng vượt quá tồn kho');
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      await dispatch(addToCart({ productId: product._id, quantity })).unwrap();
+      dispatch(fetchCart());
+      toast.success('Đã thêm vào giỏ hàng!');
+    } catch (error) {
+      toast.error(error || 'Không thể thêm vào giỏ hàng');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -69,6 +107,7 @@ export default function ProductDetailPage() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
+        {/* Breadcrumb */}
         <nav className="mb-6 text-sm">
           <Link to="/home" className="text-gray-500 hover:text-blue-600">Trang chủ</Link>
           <span className="mx-2 text-gray-400">/</span>
@@ -89,6 +128,7 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Hình ảnh */}
           <div>
             <Swiper modules={[Navigation]} navigation className="mb-4">
               {images.map((img, i) => (
@@ -99,6 +139,7 @@ export default function ProductDetailPage() {
             </Swiper>
           </div>
 
+          {/* Thông tin */}
           <div>
             {product.category && (
               <span className="inline-block bg-blue-100 text-blue-600 text-xs px-3 py-1 rounded-full mb-3">
@@ -114,6 +155,7 @@ export default function ProductDetailPage() {
               <p className="text-gray-600 mb-4">Năm: {product.publishYear}</p>
             )}
 
+            {/* Giá */}
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl font-bold text-blue-600">
@@ -127,6 +169,7 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
+            {/* Tồn kho */}
             <div className="text-sm text-gray-500 mb-4">
               {product.stockQuantity > 0 ? (
                 <p>Còn <span className="font-medium text-green-600">{product.stockQuantity}</span> cuốn</p>
@@ -138,6 +181,7 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            {/* Số lượng */}
             <div className="flex items-center gap-4 mb-6">
               <span className="font-medium">Số lượng:</span>
               <div className="flex items-center border rounded-lg">
@@ -157,9 +201,27 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 mb-3">
-              Thêm vào giỏ hàng
+            {/* Nút */}
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart || cartLoading || product.stockQuantity < 1}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {addingToCart ? (
+                <>
+                  <span className="animate-spin">⏳</span>
+                  Đang thêm...
+                </>
+              ) : (
+                <>
+                  <FaShoppingCart />
+                  Thêm vào giỏ hàng
+                </>
+              )}
             </button>
+            {product.stockQuantity < 1 && (
+              <p className="text-center text-red-500 text-sm">Sản phẩm đã hết hàng</p>
+            )}
             
             <Link to="/products" className="block text-center text-blue-600 hover:underline">
               ← Quay lại danh sách sách
@@ -167,6 +229,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
+        {/* Mô tả */}
         {product.description && (
           <div className="mt-10">
             <h2 className="text-xl font-bold mb-4">Mô tả sản phẩm</h2>

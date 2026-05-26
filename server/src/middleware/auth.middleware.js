@@ -1,11 +1,18 @@
-const { validateAccessToken } = require('../shared/utils/jwt');
-const { AppException } = require('../shared/errors/AppError');
+const { verifyAccessToken } = require('../shared/utils/jwt');
+const { AppError } = require('../shared/errors/AppError');
 const User = require('../modules/user/user.model');
 
-const checkAuth = async (req, res, next) => {
+/**
+ * Verifies JWT access token.
+ * Reads from HttpOnly cookie first (new flow), then falls back to
+ * Authorization: Bearer header (legacy / mobile clients).
+ */
+const authenticate = async (req, res, next) => {
   try {
+    // 1. Try HttpOnly cookie (set by login/refresh endpoints)
     let token = req.cookies?.accessToken;
 
+    // 2. Fallback: Authorization: Bearer <token>
     if (!token) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -14,14 +21,14 @@ const checkAuth = async (req, res, next) => {
     }
 
     if (!token) {
-      return next(new AppException('Không tìm thấy token xác thực', 401));
+      return next(new AppError('Không tìm thấy token xác thực', 401));
     }
 
-    const decoded = validateAccessToken(token);
-    const user = await User.findById(decoded.sub).select('-password');
+    const decoded = verifyAccessToken(token);
 
+    const user = await User.findById(decoded.sub).select('-password');
     if (!user) {
-      return next(new AppException('Tài khoản không còn tồn tại', 401));
+      return next(new AppError('Tài khoản không còn tồn tại', 401));
     }
 
     req.user = user;
@@ -31,11 +38,20 @@ const checkAuth = async (req, res, next) => {
   }
 };
 
-const requireRole = (...roles) => (req, res, next) => {
+/**
+ * Restricts access to specific roles.
+ * Usage: authorize('admin', 'teacher')
+ */
+const authorize = (...roles) => (req, res, next) => {
   if (!req.user || !roles.includes(req.user.role)) {
-    return next(new AppException('Bạn không có quyền thực hiện hành động này', 403));
+    return next(new AppError('Bạn không có quyền thực hiện hành động này', 403));
   }
   next();
 };
 
-module.exports = { checkAuth, requireRole };
+module.exports = {
+  authenticate,
+  authorize,
+  requireAuth: authenticate,
+  requireAdmin: authorize('admin'),
+};

@@ -10,6 +10,13 @@ import AuthButton from '../../components/AuthButton/AuthButton';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
+/**
+ * ForgotPasswordPage – quên mật khẩu + đặt lại mật khẩu bằng OTP.
+ *
+ * Flow:
+ *   1. Nhập email → gửi OTP
+ *   2. Nhập OTP + mật khẩu mới → đặt lại
+ */
 export default function ForgotPasswordPage() {
   const { forgotPassword, resetPasswordOtp } = useAuth();
   const loading = useSelector(selectAuthLoading);
@@ -21,6 +28,7 @@ export default function ForgotPasswordPage() {
   const [errors, setErrors]             = useState({});
   const [sent, setSent]                 = useState(false);
 
+  // ── Step 1: Request OTP ───────────────────────────────────────────────────
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     const errs = {};
@@ -32,6 +40,7 @@ export default function ForgotPasswordPage() {
     if (success) setSent(true);
   };
 
+  // ── Step 2: Reset Password ────────────────────────────────────────────────
   const handleResetPassword = async (e) => {
     e.preventDefault();
     const errs = {};
@@ -50,6 +59,7 @@ export default function ForgotPasswordPage() {
     await resetPasswordOtp({ email, otp, newPassword });
   };
 
+  // ── Render Step 1 ─────────────────────────────────────────────────────────
   const renderRequestForm = () => (
     <>
       <div className="text-center mb-8">
@@ -76,6 +86,7 @@ export default function ForgotPasswordPage() {
     </>
   );
 
+  // ── Render Step 2 ─────────────────────────────────────────────────────────
   const renderResetForm = () => (
     <>
       <div className="text-center mb-6">
@@ -90,6 +101,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       <form onSubmit={handleResetPassword} noValidate>
+        {/* OTP */}
         <AuthInput
           id="reset-otp"
           name="otp"
@@ -102,6 +114,7 @@ export default function ForgotPasswordPage() {
           autoComplete="one-time-code"
         />
 
+        {/* New Password */}
         <AuthInput
           id="reset-new-password"
           name="newPassword"
@@ -114,6 +127,7 @@ export default function ForgotPasswordPage() {
           autoComplete="new-password"
         />
 
+        {/* Confirm New Password */}
         <AuthInput
           id="reset-confirm-password"
           name="confirmPassword"

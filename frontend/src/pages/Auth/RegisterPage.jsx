@@ -9,6 +9,10 @@ import PasswordStrength  from '../../components/PasswordStrength/PasswordStrengt
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
+/**
+ * RegisterPage – trang đăng ký tài khoản mới.
+ * Sau khi đăng ký thành công, hiển thị bước xác minh OTP qua email.
+ */
 export default function RegisterPage() {
   const { register, verifyEmailOtp, loading } = useAuth();
 
@@ -18,6 +22,7 @@ export default function RegisterPage() {
   const [errors, setErrors]     = useState({});
   const [otpStep, setOtpStep]   = useState(false);
 
+  // ── Validation ─────────────────────────────────────────────────────────────
   const validate = () => {
     const errs = {};
     if (!formData.email)
@@ -47,6 +52,7 @@ export default function RegisterPage() {
     return errs;
   };
 
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: '' }));
@@ -70,10 +76,12 @@ export default function RegisterPage() {
     if (result?.requiresEmailVerification) setOtpStep(true);
   };
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12
                     bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900">
       <AuthCard>
+        {/* ── Header ── */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🧠</div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
@@ -86,8 +94,10 @@ export default function RegisterPage() {
           </p>
         </div>
 
+        {/* ── Form ── */}
         <form onSubmit={handleSubmit} noValidate>
           {otpStep ? (
+            /* OTP step */
             <AuthInput
               id="register-otp"
               name="otp"
@@ -104,6 +114,7 @@ export default function RegisterPage() {
             />
           ) : (
             <>
+              {/* Email */}
               <AuthInput
                 id="register-email"
                 name="email"
@@ -116,6 +127,7 @@ export default function RegisterPage() {
                 autoComplete="email"
               />
 
+              {/* Username */}
               <AuthInput
                 id="register-username"
                 name="username"
@@ -128,6 +140,7 @@ export default function RegisterPage() {
                 autoComplete="username"
               />
 
+              {/* Password */}
               <AuthInput
                 id="register-password"
                 name="password"
@@ -151,8 +164,10 @@ export default function RegisterPage() {
                 autoComplete="new-password"
               />
 
+              {/* Password strength meter */}
               <PasswordStrength password={formData.password} />
 
+              {/* Confirm password */}
               <AuthInput
                 id="register-confirm"
                 name="confirm"
@@ -174,6 +189,7 @@ export default function RegisterPage() {
           </AuthButton>
         </form>
 
+        {/* ── Footer ── */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Đã có tài khoản?{' '}
           <Link to="/login" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">

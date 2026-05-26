@@ -1,10 +1,16 @@
-const messageBus = require('./eventBus');
-const emailService = require('../services/mailer.service');
+const eventBus = require('./eventBus');
+const mailerService = require('../services/mailer.service');
 
-messageBus.on('user:registered', async ({ email, username, otp }) => {
+/**
+ * Register all domain event handlers.
+ * Side-effects (emails) are decoupled from business logic via EventBus.
+ */
+
+// user:registered → send email verification OTP
+eventBus.on('user:registered', async ({ email, username, otp }) => {
   try {
-    console.log(`✉  [Event] user:registered — ${email}`);
-    await emailService.send({
+    console.log(`📧 [Event] user:registered — ${email}`);
+    await mailerService.sendMail({
       to: email,
       subject: 'LoginAuth BT02 - Xác minh email của bạn',
       text: `Xin chào ${username}, mã OTP của bạn là: ${otp}. Mã hết hạn sau 10 phút.`,
@@ -25,14 +31,15 @@ messageBus.on('user:registered', async ({ email, username, otp }) => {
       `,
     });
   } catch (err) {
-    console.error('[MessageBus] user:registered handler error:', err.message);
+    console.error('[EventBus] user:registered handler error:', err.message);
   }
 });
 
-messageBus.on('user:passwordResetOtp', async ({ email, username, otp }) => {
+// user:passwordResetOtp → send password reset OTP
+eventBus.on('user:passwordResetOtp', async ({ email, username, otp }) => {
   try {
-    console.log(`✉  [Event] user:passwordResetOtp — ${email}`);
-    await emailService.send({
+    console.log(`📧 [Event] user:passwordResetOtp — ${email}`);
+    await mailerService.sendMail({
       to: email,
       subject: 'LoginAuth BT02 - Đặt lại mật khẩu',
       text: `Xin chào ${username}, mã OTP đặt lại mật khẩu của bạn là: ${otp}. Mã hết hạn sau 10 phút.`,
@@ -53,8 +60,8 @@ messageBus.on('user:passwordResetOtp', async ({ email, username, otp }) => {
       `,
     });
   } catch (err) {
-    console.error('[MessageBus] user:passwordResetOtp handler error:', err.message);
+    console.error('[EventBus] user:passwordResetOtp handler error:', err.message);
   }
 });
 
-module.exports = messageBus;
+module.exports = eventBus;

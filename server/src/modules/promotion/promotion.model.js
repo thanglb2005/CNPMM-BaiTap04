@@ -58,10 +58,12 @@ const PromotionSchema = new Schema(
   }
 );
 
+// Indexes
 PromotionSchema.index({ slug: 1 }, { unique: true });
 PromotionSchema.index({ isActive: 1 });
 PromotionSchema.index({ startDate: 1, endDate: 1 });
 
+// Virtual for checking if promotion is currently active
 PromotionSchema.virtual('isCurrentlyActive').get(function () {
   const now = new Date();
   return this.isActive && now >= this.startDate && now <= this.endDate;
@@ -70,6 +72,7 @@ PromotionSchema.virtual('isCurrentlyActive').get(function () {
 PromotionSchema.set('toJSON', { virtuals: true });
 PromotionSchema.set('toObject', { virtuals: true });
 
+// Static method to generate slug
 PromotionSchema.statics.generateSlug = function (title) {
   return title
     .toLowerCase()

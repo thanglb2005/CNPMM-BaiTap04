@@ -1,4 +1,4 @@
-class HttpResponse {
+class ApiResponse {
   static success(data, message = 'Success', meta = null) {
     return {
       success: true,
@@ -20,4 +20,4 @@ class HttpResponse {
   }
 }
 
-module.exports = { HttpResponse };
+module.exports = { ApiResponse };
