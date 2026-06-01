@@ -4,6 +4,7 @@ const ShoppingCart = require('../cart/cart.model');
 const Product = require('../product/product.model');
 const { ApiResponse } = require('../../shared/utils/apiResponse');
 const AppError = require('../../shared/errors/AppError');
+const loyaltyController = require('../loyalty/loyalty.controller');
 
 const SHIPPING_FEE = 30000;
 // Thời gian tự động xác nhận đơn hàng: 30 phút = 30 * 60 * 1000 ms
@@ -406,6 +407,20 @@ const updateOrderStatus = async (req, res) => {
   if (status === ORDER_STATUS.DELIVERED) {
     purchaseOrder.actualDelivery = new Date();
     purchaseOrder.paymentStatus = PAYMENT_STATUS.PAID; // COD giao thành công coi như đã trả tiền
+
+    // Tặng điểm tích lũy cho khách hàng khi nhận hàng thành công
+    try {
+      const pointsEarned = await loyaltyController.earnPointsFromPurchase(
+        purchaseOrder.userId,
+        purchaseOrder.totalAmount,
+        purchaseOrder.orderNumber
+      );
+      if (pointsEarned) {
+        console.log(`[Loyalty] Đã tặng ${pointsEarned} điểm cho đơn hàng ${purchaseOrder.orderNumber}`);
+      }
+    } catch (err) {
+      console.error(`[Loyalty] Lỗi khi tặng điểm cho đơn hàng ${purchaseOrder.orderNumber}:`, err);
+    }
   }
 
   // Hủy tác vụ tự động xác nhận đơn hàng khi admin cập nhật sớm

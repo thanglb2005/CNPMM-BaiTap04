@@ -45,6 +45,13 @@ app.use('/api/cart',        require('./modules/cart/cart.routes'));
 app.use('/api/orders',      require('./modules/order/order.routes'));
 app.use('/api/admin',       require('./modules/admin/admin.routes'));
 
+// Review, Favorite, Coupon, Loyalty, Recently Viewed routes
+require('./modules/review/review.routes')(app);
+require('./modules/favorite/favorite.routes')(app);
+require('./modules/coupon/coupon.routes')(app);
+require('./modules/loyalty/loyalty.routes')(app);
+require('./modules/recentlyViewed/recentlyViewed.routes')(app);
+
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use('/{*path}', (req, res) => {
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `Route ${req.originalUrl} not found` } });

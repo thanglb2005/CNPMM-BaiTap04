@@ -40,6 +40,13 @@ import ProductDetailPage from './pages/Product/ProductDetailPage';
 import NewsPage         from './pages/News/NewsPage';
 import NewsDetailPage   from './pages/News/NewsDetailPage';
 
+// New Feature Pages
+import FavoritesPage    from './pages/Favorite/FavoritesPage';
+import MyCouponsPage    from './pages/Coupon/MyCouponsPage';
+import LoyaltyPointsPage from './pages/Loyalty/LoyaltyPointsPage';
+import RecentlyViewedPage from './pages/RecentlyViewed/RecentlyViewedPage';
+import MyReviewsPage    from './pages/Review/MyReviewsPage';
+
 // ── Loading Screen ─────────────────────────────────────────────────────────────
 function LoadingScreen({ message = 'Dang kiem tra phien dang nhap...' }) {
   return (
@@ -273,6 +280,52 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <OrderDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* New Feature Routes */}
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <FavoritesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-coupons"
+            element={
+              <ProtectedRoute>
+                <MyCouponsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/loyalty"
+            element={
+              <ProtectedRoute>
+                <LoyaltyPointsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/recently-viewed"
+            element={
+              <ProtectedRoute>
+                <RecentlyViewedPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-reviews"
+            element={
+              <ProtectedRoute>
+                <MyReviewsPage />
               </ProtectedRoute>
             }
           />
